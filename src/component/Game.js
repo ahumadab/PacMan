@@ -1,4 +1,5 @@
 import React from 'react'
+import Ghost, { GhostComponent } from './Ghost'
 
 class Game extends React.Component
 {
@@ -10,14 +11,24 @@ class Game extends React.Component
             layout: [],
             squares: [],
             pacManSpointPoint: 490,
-            pacManCurrentPosition: 490
+            pacManCurrentPosition: 490,
+            score: 0,
+            ghosts: [
+                new Ghost('blinky', 348, 250),
+                new Ghost('pinky', 376, 400),
+                new Ghost('inky', 351, 300),
+                new Ghost('clyde', 379, 500),
+            ]
         }
     }
 
     componentDidMount = async () =>
     {
         await this.createBoard()
+        this.spawnGhosts()
+        this.moveGhosts()
         this.spawnPacMan()
+        
         document.addEventListener('keyup', this.movePacMan)
     }
 
@@ -25,15 +36,21 @@ class Game extends React.Component
     {
         if (prevState.pacManCurrentPosition !== this.state.pacManCurrentPosition)
         {
-            const layout = this.state.layout.map((el, index) => 
+            const { layout } = this.state
+            const squares = this.state.squares.map((el, index) => 
             {
                 if (index === this.state.pacManCurrentPosition) return 5
-                
-                if (index === prevState.pacManCurrentPosition) return 2
+                if (index === prevState.pacManCurrentPosition) {
+                    const hasMovedIntoPacDot = (layout[prevState.pacManCurrentPosition]=== 0) && (prevState.squares[this.state.pacManCurrentPosition] === 0)
+                    if (hasMovedIntoPacDot) this.setState({ score: this.state.score + 1})
+                    
+                    return 4
+                }
                 return el
             })
-            this.setState({ layout })
+            this.setState({ squares })
         }
+
     }
 
     createBoard = () =>
@@ -68,43 +85,56 @@ class Game extends React.Component
             1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
             1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
         ]
-        this.setState({ layout })
+        this.setState({ layout, squares: layout })
     }
 
     spawnPacMan = () =>
     {
-        const layout = this.state.layout.map((el, index) => {
+        const squares = this.state.squares.map((el, index) => {
             if (index === this.state.pacManSpointPoint) return 5
             return el
         })
-        this.setState({ layout, pacManCurrentPosition: this.state.pacManSpointPoint })
+        this.setState({ squares, pacManCurrentPosition: this.state.pacManSpointPoint })
     }
 
     movePacMan = (e) => 
     {
-        const { width, pacManCurrentPosition } = this.state
+        const { width, pacManCurrentPosition, layout } = this.state
+        let nextPosition
         switch(e.keyCode)
         {
             case 37:
-                if (pacManCurrentPosition % width !== 0)
+                nextPosition = layout[pacManCurrentPosition - 1]
+                if (pacManCurrentPosition % width !== 0  && nextPosition !== 1 && nextPosition !== 2  )
                 {
                     this.setState({ pacManCurrentPosition: pacManCurrentPosition - 1 })
                 }
+                if (pacManCurrentPosition - 1 === 363) 
+                {
+                    this.setState({ pacManCurrentPosition: 391 })
+                }
                 break
             case 38:
-                if (pacManCurrentPosition - width >= 0)
+                nextPosition = layout[pacManCurrentPosition - width]
+                if (pacManCurrentPosition - width >= 0 && nextPosition !== 1 && nextPosition !== 2  )
                 {
                     this.setState({ pacManCurrentPosition: pacManCurrentPosition - width })
                 }
                 break
             case 39:
-                if (pacManCurrentPosition % width < width-1)
+                nextPosition = layout[pacManCurrentPosition + 1]
+                if (pacManCurrentPosition % width < width - 1 && nextPosition !== 1 && nextPosition !== 2   )
                 {
                     this.setState({ pacManCurrentPosition: pacManCurrentPosition + 1 })
                 }
+                if (pacManCurrentPosition + 1 === 392) 
+                {
+                    this.setState({ pacManCurrentPosition: 364 })
+                }
                 break
             case 40:
-                if (pacManCurrentPosition + width < width * width)
+                nextPosition = layout[pacManCurrentPosition + width]
+                if (pacManCurrentPosition + width < width * width && nextPosition !== 1 && nextPosition !== 2  )
                 {
                     this.setState({ pacManCurrentPosition: pacManCurrentPosition + width })
                 }
@@ -112,26 +142,55 @@ class Game extends React.Component
         }
     }
 
+    spawnGhosts = () =>
+    {
+        const squares = [...this.state.squares]
+        this.state.ghosts.forEach(ghost => squares[ghost.startIndex] = ghost )
+        this.setState({ squares })
+    }
+
+    moveGhosts = () =>
+    {
+        const directions =  [-1, +1, this.state.width, -this.state.width]
+        const squares = [...this.state.squares]
+        this.state.ghosts.forEach(ghost => {
+            ghost.timerId = setInterval(()=>{
+                let direction = directions[Math.floor(Math.random() * directions.length)]
+                let prevPositionIndex = ghost.currentIndex
+                let nextPositionIndex = ghost.currentIndex + direction
+                let isNextGhostPositionAWall = squares[nextPositionIndex] === 1
+                let isNextGhostPositionAGhost = !!squares[nextPositionIndex].render
+                if (!isNextGhostPositionAWall && !isNextGhostPositionAGhost )
+                {
+                    const thisGhost = squares[prevPositionIndex]
+                    squares[prevPositionIndex] = squares[nextPositionIndex]
+                    squares[nextPositionIndex] = thisGhost
+                    ghost.currentIndex = nextPositionIndex
+                    this.setState({ squares })
+                }
+            }, ghost.speed)
+        })
+    }
+
     render = () =>
     {
         return (
             <>
                 <div className="grid">
-                    { this.state.layout.map((el, index) => (
-                        <div key={index}>
-                            {el=== 0 && (<div className="pac-dot"></div>)}
-                            {el=== 1 && (<div className="wall"></div>)}
-                            {el=== 2 && (<div className=""></div>)}
-                            {el=== 3 && (<div className="power-pellet"></div>)}
-                            {el=== 4 && (<div className=""></div>)}
-                            {el=== 5 && (<div className="pac-man"></div>)}
-                        </div>
+                    { this.state.squares.map((el, index) => (
+                        <>  
+                            {el === 0 && (<div key={index} className="pac-dot">{el}</div>)}
+                            {el === 1 && (<div key={index} className="wall">{el}</div>)}
+                            {el === 2 && (<div key={index} className="ghost-lair">{el}</div>)}
+                            {el === 3 && (<div key={index} className="power-pellet">{el}</div>)}
+                            {el === 4 && (<div key={index} className="empty">{el}</div>)}
+                            {el === 5 && (<div key={index} className="pac-man">{el}</div>)}
+                            {el.render? el.render():null}
+                        </>
                     ))}
-
                 </div>
-
                 <div className="score">
-
+                    {this.state.score}
                 </div>
             </>
         )

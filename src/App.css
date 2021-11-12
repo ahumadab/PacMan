@@ -4,11 +4,11 @@
 
 .grid {
   margin: 10px;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   width: 560px;
   height: 560px;
   border: black solid;
+  grid-template-columns: repeat(28, 1fr)
 }
   .grid div {
     width: 20px;
@@ -28,6 +28,36 @@
 .power-pellet {
   background-color: green;
   border-radius: 10px;
+}
+
+.blinky {
+  background-color: red;
+  border: 0px;
+}
+
+.pinky {
+  background-color: pink;
+  border: 0px;
+}
+
+.blinky {
+  background-color: red;
+  border: 0px;
+}
+
+.inky {
+  background-color: cyan;
+  border: 0px;
+}
+
+.clyde {
+  background-color: orange;
+  border: 0px;
+}
+
+.scared-ghost {
+  background-color: aquamarine;
+  border: 0px;
 }
 
 .pac-man {
