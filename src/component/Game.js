@@ -11,13 +11,13 @@ class Game extends React.Component
             finalLayout: [],
             _layout: [],
             squares: [],
-            pacManSpointPoint: 490,
+            pacManSpawnPoint: 490,
             pacManCurrentPosition: 490,
             score: 0,
             ghosts: [
-                new Ghost('blinky', 348, 250),
-                new Ghost('pinky', 376, 400),
-                new Ghost('inky', 351, 300),
+                // new Ghost('blinky', 348, 250), //348
+                // new Ghost('pinky', 376, 400),
+                // new Ghost('inky', 351, 300),
                 new Ghost('clyde', 379, 500),
             ]
         }
@@ -91,31 +91,41 @@ class Game extends React.Component
             1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
         ]
         const finalLayout = []
+        const _layout = []
         let i = 0
-        for (let x = 0; x<28; x++)
+        for (let x = 0; x<this.state.width; x++)
         {
-            for (let y = 0; y<28; y++)
+            for (let y = 0; y<this.state.width; y++)
             {
                 finalLayout.push({
+                    posX: x,
+                    posY: y,
+                    value: layout[i]
+                })
+                _layout.push({
                     posX: x,
                     posY: y,
                     value: layout[i++]
                 })
             }
         }
-        this.setState({ finalLayout, _layout: finalLayout, squares: layout })
+        this.setState({ 
+            finalLayout: finalLayout, 
+            _layout: _layout, 
+            squares: layout 
+        })
     }
 
     spawnPacMan = () =>
     {
         const finalLayout = this.state.finalLayout.map((el, index) => {
-            if (index === this.state.pacManSpointPoint) {
+            if (index === this.state.pacManSpawnPoint) {
                 el.value = 5
                 return el
             }
             return el
         })
-        this.setState({ finalLayout, pacManCurrentPosition: this.state.pacManSpointPoint })
+        this.setState({ finalLayout, pacManCurrentPosition: this.state.pacManSpawnPoint })
     }
 
     movePacMan = (e) => 
@@ -166,7 +176,10 @@ class Game extends React.Component
     spawnGhosts = () =>
     {
         const finalLayout = [...this.state.finalLayout]
-        this.state.ghosts.forEach(ghost => finalLayout[ghost.startIndex] = ghost )
+        this.state.ghosts.forEach(ghost => {
+            finalLayout[ghost.startIndex].value = 6
+            finalLayout[ghost.startIndex].ghost = ghost
+        })
         this.setState({ finalLayout })
     }
 
@@ -174,23 +187,29 @@ class Game extends React.Component
     {
         const directions =  [-1, +1, this.state.width, -this.state.width]
         const finalLayout = [...this.state.finalLayout]
-        this.state.ghosts.forEach((ghost, index) => {
+        this.state.ghosts.forEach( (ghost, index) => {
             ghost.timerId = setInterval(()=>{
-                const direction = index !== 0 
-                    ? directions[Math.floor(Math.random() * directions.length)] 
-                    : ghost.clydeMovement(directions, this.state.finalLayout)
+                let direction
+                if (ghost.className === "blinky" ) {
+                    direction = ghost.blinkyMovement(directions, this.state.finalLayout)
+                }
+                else if (ghost.className === "clyde")
+                {
+                    direction = ghost.clydeMouvement(directions, this.state.finalLayout, )
+                }
+                else
+                {
+                    direction = ghost.defaultMouvement(directions, this.state.finalLayout)
+                }
                 const prevPositionIndex = ghost.currentIndex
                 const nextPositionIndex = ghost.currentIndex + direction
-                const isNextGhostPositionAWall = finalLayout[nextPositionIndex].value === 1
-                const isNextGhostPositionAGhost = !!finalLayout[nextPositionIndex].render
-                if (!isNextGhostPositionAWall && !isNextGhostPositionAGhost )
-                {
-                    const thisGhost = finalLayout[prevPositionIndex]
-                    finalLayout[prevPositionIndex] = this.state._layout[prevPositionIndex]
-                    finalLayout[nextPositionIndex] = thisGhost
-                    ghost.currentIndex = nextPositionIndex
-                    this.setState({ finalLayout })
-                }
+                const thisGhost = finalLayout[prevPositionIndex].ghost
+                finalLayout[prevPositionIndex] = {...this.state._layout[prevPositionIndex]}
+                if (finalLayout[nextPositionIndex] == undefined) console.log(this.state._layout[prevPositionIndex]);
+                finalLayout[nextPositionIndex].value = 6
+                finalLayout[nextPositionIndex].ghost = thisGhost
+                ghost.currentIndex = nextPositionIndex
+                this.setState({ finalLayout })
             }, ghost.speed)
         })
     }
@@ -211,7 +230,7 @@ class Game extends React.Component
                             {el.value === 3 && (<div key={index} className="power-pellet"><p>[{el.posX}-{el.posY}] {el.value} {index}</p> </div>)}
                             {el.value === 4 && (<div key={index} className="empty"><p>[{el.posX}-{el.posY}] {el.value} {index}</p></div>)}
                             {el.value === 5 && (<div key={index} className="pac-man"><p>[{el.posX}-{el.posY}] {el.value} {index}</p></div>)}
-                            {el.render? el.render():null}
+                            {el.value === 6 ? el.ghost.render():null}
                         </>
                     ))}
                 </div>
