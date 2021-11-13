@@ -5,24 +5,30 @@
 .grid {
   margin: 10px;
   display: grid;
-  width: 560px;
-  height: 560px;
+  width: 60em;
+  height: 60em;
   border: black solid;
   grid-template-columns: repeat(28, 1fr)
 }
   .grid div {
-    width: 20px;
-    height: 20px;
+    width: 2.13em;
+    height: 2.13em;
+    display: flex;
+    flex-direction: column;
   }
-
+    .grid div p {
+      font-size: 50%;
+    }
 .pac-dot {
   background-color: green;
-  border: 5px solid white;
+  border: 1px solid white;
   box-sizing: border-box;
 }
 
 .wall {
   background-color: blue;
+  border: 1px solid black;
+  box-sizing: border-box;
 }
 
 .power-pellet {

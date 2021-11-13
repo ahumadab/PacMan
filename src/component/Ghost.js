@@ -11,14 +11,47 @@ class Ghost
         this.timerId = NaN
     }
 
-    move = (width) =>
+    clydeMovement = (allDirections, finalLayout) =>
     {
         
+        let nextPositionIndex
+        let possibleDirections = []
+        for (let i = 0; i < allDirections.length; i++)
+        {
+            nextPositionIndex = this.currentIndex + allDirections[i]
+            const isNextGhostPositionAWall = finalLayout[nextPositionIndex]?.value === 1
+            const isNextGhostPositionAGhost = !!!finalLayout[nextPositionIndex].render
+            if (!isNextGhostPositionAWall || !isNextGhostPositionAGhost)
+            {
+                possibleDirections.push(allDirections[i])
+            }
+        }
+        
+        if (possibleDirections.length >= 3)
+        {
+            const direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)]
+            this.direction = direction
+            return this.direction
+        }
+        else 
+        {
+            const direction = this.direction || possibleDirections[Math.floor(Math.random() * possibleDirections.length)]
+            nextPositionIndex = this.currentIndex + direction
+            const isNextGhostPositionAWall = finalLayout[nextPositionIndex].value === 1
+            const isNextGhostPositionAGhost = !!!finalLayout[nextPositionIndex].render
+            if (isNextGhostPositionAWall || !isNextGhostPositionAGhost )
+            {
+                this.direction = null
+                return this.clydeMovement(allDirections, finalLayout)
+            }
+            this.direction = direction
+            return this.direction
+        }
     }
 
     render = () =>
     {
-        return <GhostComponent currentIndex={this.currentIndex-300} className={this.className} />
+        return <GhostComponent currentIndex={this.currentIndex} className={this.className} />
     }
 }
 
