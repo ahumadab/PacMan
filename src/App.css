@@ -70,3 +70,23 @@
   background-color: yellow;
   border-radius: 10px;
 }
+
+.red {
+  background-color: red;
+  border: 0px;
+}
+
+.blue {
+  background-color: lightblue;
+  border: 0px;
+}
+
+.green {
+  background-color: green;
+  border: 0px;
+}
+
+.orange {
+  background-color: orange;
+  border: 0px;
+}

@@ -1,4 +1,5 @@
 import React from "react";
+import Vector2 from "../utils/Vector2";
 
 class Ghost 
 {
@@ -56,7 +57,7 @@ class Ghost
         {
             const direction = this.direction || possibleDirections[Math.floor(Math.random() * possibleDirections.length)]
             nextPositionIndex = this.currentIndex + direction
-            if (finalLayout[nextPositionIndex] == undefined) return 0
+            if (finalLayout[nextPositionIndex] === undefined) return 0
             const isNextGhostPositionAWall = finalLayout[nextPositionIndex].value === 1
             const isNextGhostPositionAGhost = finalLayout[nextPositionIndex].value === 6
             if (this.currentIndex === 364 && nextPositionIndex === 363)
@@ -77,9 +78,141 @@ class Ghost
         }
     }
 
-    clydeMouvement = (allDirections, finalLayout) =>
+    tab = [0]
+    clydeMouvement = (allDirections, finalLayout, indexDestination, openList = [], closedList = [], gCost = 0, openListHistory = []  ) =>
     {
-        return 1
+        
+        const currentPosition = finalLayout[this.currentIndex]
+        const destinationPosition = finalLayout[indexDestination]
+        const currentVector = new Vector2(currentPosition.posX, currentPosition.posY)
+        const destinationVector = new Vector2(destinationPosition.posX, destinationPosition.posY)
+        const distance = currentVector.Distance(destinationVector)
+        const hCost = Math.floor(distance*10) // la distance en gros
+        const fCost = gCost + hCost // cout total = cout de déplacement + distance
+        let newOpenList = []
+        let newOpenListHistory = []
+        if (openList.length === 0 && closedList.length === 0)
+        {
+            closedList.push({
+                position: currentPosition,
+                index: this.currentIndex,
+                gCost: gCost, 
+                hCost, 
+                fCost
+            })
+            const firstResearch = []
+            allDir : for (let i = 0; i < allDirections.length; i++)
+            {
+                const nextPositionIndex = this.currentIndex + allDirections[i]
+                const nextPossibleMovePosition = finalLayout[nextPositionIndex]
+
+
+                const isNextGhostPositionAWall = nextPossibleMovePosition.value === 1
+                const isNextGhostPositionAGhost = nextPossibleMovePosition.value === 6
+                if (isNextGhostPositionAWall || isNextGhostPositionAGhost)
+                {
+                    continue allDir
+                }
+
+                const nextPossibleMoveVector = new Vector2(nextPossibleMovePosition.posX, nextPossibleMovePosition.posY)
+                const distance = nextPossibleMoveVector.Distance(destinationVector)
+                const nextHCost = Math.floor(distance*10)
+                const nextGCost = 10 + gCost
+                const nextFCost = nextGCost + nextHCost
+                // console.log(`NextPos ${nextPositionIndex} : ${fCost} => ${nextHCost}distance + ${nextGCost}effort`);
+                firstResearch.push({
+                    position: nextPossibleMovePosition,
+                    index: nextPositionIndex,
+                    gCost: nextGCost, 
+                    hCost: nextHCost, 
+                    fCost: nextFCost
+                })
+            }
+            newOpenList.push(firstResearch)
+            newOpenListHistory.push(firstResearch)
+        }
+        else
+        {
+            newOpenListHistory = [...openListHistory]
+            newOpenList = []
+            for (let i = 0; i < openList.length; i++)
+            {
+                allIndex : for (let j = 0; j < openList[i].length; j++)
+                {
+                    if (closedList.some(closedResearch => closedResearch.index === openList[i][j].index))
+                    {
+                        continue allIndex
+                    }
+                    closedList.push({
+                        position: openList[i][j].position,
+                        index: openList[i][j].index,
+                        gCost: openList[i][j].gCost, 
+                        hCost: openList[i][j].hCost, 
+                        fCost: openList[i][j].fCost
+                    })
+                    
+                    const nextResearch = []
+                    allDir : for (let k = 0; k < allDirections.length; k++)
+                    {
+                        const nextPositionIndex = openList[i][j].index + allDirections[k]
+                        if (closedList.some(closedResearch => closedResearch.index === nextPositionIndex))
+                        {
+                            continue allDir
+                        }
+                        if (closedList.every(closedResearch => closedResearch.index === nextPositionIndex))
+                        {
+                            return 0
+                        }
+                        const isNextGhostPositionAWall = finalLayout[nextPositionIndex].value === 1
+                        const isNextGhostPositionAGhost = finalLayout[nextPositionIndex].value === 6
+                        if (isNextGhostPositionAWall || isNextGhostPositionAGhost)
+                        {
+                            continue allDir
+                        }
+                        const nextPossibleMovePosition = finalLayout[nextPositionIndex]
+                        const nextPossibleMoveVector = new Vector2(nextPossibleMovePosition.posX, nextPossibleMovePosition.posY)
+                        const distance = nextPossibleMoveVector.Distance(destinationVector)
+                        const nextHCost = Math.floor(distance*10)
+                        const nextGCost = 10 + gCost
+                        const nextFCost = nextGCost + nextHCost
+                        nextResearch.push({
+                            position: nextPossibleMovePosition,
+                            index: nextPositionIndex,
+                            gCost: nextGCost, 
+                            hCost: nextHCost, 
+                            fCost: nextFCost
+                        })
+                        
+                        if (nextPositionIndex === indexDestination)
+                        {
+                            console.error('found', finalLayout[openList[i][j].index], finalLayout[nextPositionIndex]);
+                            return {
+                                openList,
+                                openListHistory: newOpenListHistory,
+                                closedList,
+                                positionFound: {
+                                    position: nextPossibleMovePosition,
+                                    index: nextPositionIndex,
+                                    gCost: nextGCost, 
+                                    hCost: nextHCost, 
+                                    fCost: nextFCost
+                                },
+                                prevPositionFound: finalLayout[openList[i][j].index]
+                            }
+                        }
+                        
+                    }
+                    newOpenList.push(nextResearch)
+                    // newOpenList.sort((a, b) => a.)
+                    newOpenListHistory.push(nextResearch)
+                    // const count = newOpenList.reduce((count, row) => count + row.length, 0);
+                    // console.log(count);
+                }
+                
+            }
+        } // end of else
+        
+        return this.clydeMouvement(allDirections, finalLayout, indexDestination, newOpenList, closedList, (gCost+10), newOpenListHistory )
     }
 
     defaultMouvement = (allDirections, finalLayout) =>
@@ -96,8 +229,9 @@ class Ghost
                 possibleDirections.push(allDirections[i])
             }
         }
-        if (possibleDirections.length == 0) return 0
+        if (possibleDirections.length === 0) return 0
         const direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)]
+        return 0
         return direction
     }
 

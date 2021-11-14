@@ -1,5 +1,5 @@
 import React from 'react'
-import Ghost, { GhostComponent } from './Ghost'
+import Ghost from './Ghost'
 
 class Game extends React.Component
 {
@@ -17,8 +17,10 @@ class Game extends React.Component
             ghosts: [
                 // new Ghost('blinky', 348, 250), //348
                 // new Ghost('pinky', 376, 400),
-                // new Ghost('inky', 351, 300),
-                new Ghost('clyde', 379, 500),
+                // new Ghost('inky', 34, 300),
+                new Ghost('clyde', 375, 500),
+                // new Ghost('inky', 34, 300),
+                // new Ghost('inky', 30, 300),
             ]
         }
     }
@@ -28,8 +30,8 @@ class Game extends React.Component
         await this.createBoard()
         this.spawnPacMan()
         this.spawnGhosts()
-        this.moveGhosts()
-        
+        // this.moveGhosts()
+        this.printAStar()
         document.addEventListener('keyup', this.movePacMan)
     }
 
@@ -188,14 +190,14 @@ class Game extends React.Component
         const directions =  [-1, +1, this.state.width, -this.state.width]
         const finalLayout = [...this.state.finalLayout]
         this.state.ghosts.forEach( (ghost, index) => {
-            ghost.timerId = setInterval(()=>{
+            ghost.timerId = setTimeout(()=>{
                 let direction
                 if (ghost.className === "blinky" ) {
                     direction = ghost.blinkyMovement(directions, this.state.finalLayout)
                 }
                 else if (ghost.className === "clyde")
                 {
-                    direction = ghost.clydeMouvement(directions, this.state.finalLayout, )
+                    direction = ghost.clydeMouvement(directions, this.state.finalLayout, 293)
                 }
                 else
                 {
@@ -205,13 +207,65 @@ class Game extends React.Component
                 const nextPositionIndex = ghost.currentIndex + direction
                 const thisGhost = finalLayout[prevPositionIndex].ghost
                 finalLayout[prevPositionIndex] = {...this.state._layout[prevPositionIndex]}
-                if (finalLayout[nextPositionIndex] == undefined) console.log(this.state._layout[prevPositionIndex]);
+                if (finalLayout[nextPositionIndex] === undefined) console.log(this.state._layout[prevPositionIndex]);
                 finalLayout[nextPositionIndex].value = 6
                 finalLayout[nextPositionIndex].ghost = thisGhost
                 ghost.currentIndex = nextPositionIndex
                 this.setState({ finalLayout })
-            }, ghost.speed)
+            }, 1000)
         })
+    }
+
+    printAStar = async () =>
+    {
+        const directions =  [-1, -this.state.width, +1, this.state.width]
+        setTimeout(async ()=>
+        {
+            const caca = this.state.ghosts[0].clydeMouvement(directions, this.state.finalLayout, 373)
+            // console.log('res', caca);
+            const layout = [...this.state.finalLayout]
+            for (let i = 0; i < caca.closedList.length; i++)
+            {
+                // console.log('closed list', i, caca.closedList[i]);
+                // const layout = [...this.state.finalLayout]
+                layout[caca.closedList[i].index].value = 7
+                layout[caca.closedList[i].index].gCost = caca.closedList[i].gCost
+                layout[caca.closedList[i].index].hCost = caca.closedList[i].hCost
+                layout[caca.closedList[i].index].fCost = caca.closedList[i].fCost
+                this.setState({ finalLayout: layout })
+                await this.sleep(0.01)
+                // console.log('open list', i, caca.openList);
+                if (caca.openListHistory[i]) 
+                {
+                    for (let j = 0; j< caca.openListHistory[i].length; j++)
+                    {
+                        // console.log(caca.openListHistory[i][j].index);
+                        layout[caca.openListHistory[i][j].index].value = 8
+                        layout[caca.openListHistory[i][j].index].gCost = caca.openListHistory[i][j].gCost
+                        layout[caca.openListHistory[i][j].index].hCost = caca.openListHistory[i][j].hCost
+                        layout[caca.openListHistory[i][j].index].fCost = caca.openListHistory[i][j].fCost
+                        this.setState({ finalLayout: layout })
+                        await this.sleep(0.01)
+                    }
+                }
+                
+                layout[caca.closedList[i].index].value = 9
+                this.setState({ finalLayout: layout })
+                await this.sleep(0.1)
+            }
+            // const layout = [...this.state.finalLayout]
+            layout[caca.positionFound.index].value = 10
+            layout[caca.positionFound.index].gCost = caca.positionFound.gCost
+            layout[caca.positionFound.index].hCost = caca.positionFound.hCost
+            layout[caca.positionFound.index].fCost = caca.positionFound.fCost
+            this.setState({ finalLayout: layout })
+            await this.sleep(0.01)
+        }, 
+        0)
+    }
+
+    sleep = (seconds) => {
+        return new Promise(resolve => setTimeout(resolve, seconds*1000));
     }
 
     render = () =>
@@ -231,6 +285,10 @@ class Game extends React.Component
                             {el.value === 4 && (<div key={index} className="empty"><p>[{el.posX}-{el.posY}] {el.value} {index}</p></div>)}
                             {el.value === 5 && (<div key={index} className="pac-man"><p>[{el.posX}-{el.posY}] {el.value} {index}</p></div>)}
                             {el.value === 6 ? el.ghost.render():null}
+                            {el.value === 7 && (<div key={index} className="green"><p>[{el.gCost}-{el.hCost}] {el.fCost} {index}</p></div>)}
+                            {el.value === 8 && (<div key={index} className="blue"><p>[{el.gCost}-{el.hCost}] {el.fCost} {index}</p></div>)}
+                            {el.value === 9 && (<div key={index} className="red"><p>[{el.gCost}-{el.hCost}] {el.fCost} {index}</p></div>)}
+                            {el.value === 10 && (<div key={index} className="orange"><p>[{el.gCost}-{el.hCost}] {el.fCost} {index}</p></div>)}
                         </>
                     ))}
                 </div>
