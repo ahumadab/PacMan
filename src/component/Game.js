@@ -15,10 +15,10 @@ class Game extends React.Component
             pacManCurrentPosition: 490,
             score: 0,
             ghosts: [
-                // new Ghost('blinky', 348, 250), //348
-                // new Ghost('pinky', 376, 400),
-                // new Ghost('inky', 351, 300),
-                new Ghost('clyde', 29, 500),
+                new Ghost('blinky', 348, 250), //348
+                new Ghost('pinky', 376, 400),
+                new Ghost('inky', 351, 300),
+                new Ghost('clyde', 379, 500),
                 // new Ghost('inky', 34, 300),
                 // new Ghost('inky', 30, 300),
             ]
@@ -30,8 +30,8 @@ class Game extends React.Component
         await this.createBoard()
         this.spawnPacMan()
         this.spawnGhosts()
-        this.moveGhosts()
-        // this.printAStar()
+        // this.moveGhosts()
+        this.printAStar()
         document.addEventListener('keyup', this.movePacMan)
     }
 
@@ -201,7 +201,7 @@ class Game extends React.Component
                 }
                 else
                 {
-                    direction = ghost.defaultMouvement(directions, this.state.finalLayout)
+                    direction = ghost.blinkyMovement(directions, this.state.finalLayout)
                 }
                 const prevPositionIndex = ghost.currentIndex
                 const nextPositionIndex = ghost.currentIndex + direction
@@ -222,67 +222,68 @@ class Game extends React.Component
         console.log("tsaat");
         const directions =  [-1, -this.state.width, +1, this.state.width]
         
-        console.log(this.state.ghosts[0].getActualPath(directions, this.state.finalLayout, this.state.pacManCurrentPosition));
+        console.log(this.state.ghosts[3].getActualPath(directions, this.state.finalLayout, this.state.pacManCurrentPosition));
 
-        // setTimeout(async ()=>
-        // {
-        //     const caca = this.state.ghosts[0].clydeMouvementGreedy(directions, this.state.finalLayout, this.state.pacManCurrentPosition)
+        setTimeout(async ()=>
+        {
+            const caca = this.state.ghosts[3].clydeMouvementGreedy(directions, this.state.finalLayout, this.state.pacManCurrentPosition)
 
-        //     function flatten(arr) {
-        //         return arr.reduce(function (flat, toFlatten) {
-        //           return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
-        //         }, []);
-        //       }
-        //     console.log("nombre de calculs",flatten(caca.openListHistory).length);
-        //     console.log("déplacements",caca.actualPath.length);
-        //     const layout = [...this.state.finalLayout]
-        //     for (let i = 0; i < caca.closedList.length; i++)
-        //     {
-        //         // console.log('closed list', i, caca.closedList[i]);
-        //         // const layout = [...this.state.finalLayout]
-        //         layout[caca.closedList[i].index].value = 7
-        //         layout[caca.closedList[i].index].gCost = caca.closedList[i].gCost
-        //         layout[caca.closedList[i].index].hCost = caca.closedList[i].hCost
-        //         layout[caca.closedList[i].index].fCost = caca.closedList[i].fCost
-        //         this.setState({ finalLayout: layout })
-        //         await this.sleep(0.05)
-        //         // console.log('open list', i, caca.openList);
-        //         if (caca.openListHistory[i]) 
-        //         {
-        //             for (let j = 0; j< caca.openListHistory[i].length; j++)
-        //             {
-        //                 // console.log(caca.openListHistory[i][j].index);
-        //                 layout[caca.openListHistory[i][j].index].value = 8
-        //                 layout[caca.openListHistory[i][j].index].gCost = caca.openListHistory[i][j].gCost
-        //                 layout[caca.openListHistory[i][j].index].hCost = caca.openListHistory[i][j].hCost
-        //                 layout[caca.openListHistory[i][j].index].fCost = caca.openListHistory[i][j].fCost
-        //                 this.setState({ finalLayout: layout })
-        //                 await this.sleep(0.05)
-        //             }
-        //         }
+            function flatten(arr) {
+                return arr.reduce(function (flat, toFlatten) {
+                  return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
+                }, []);
+              }
+            console.log("nombre de calculs",flatten(caca.openListHistory).length);
+            console.log("déplacements",caca.actualPath.length);
+            const layout = [...this.state.finalLayout]
+            for (let i = 0; i < caca.closedList.length; i++)
+            {
+                // console.log('closed list', i, caca.closedList[i]);
+                // const layout = [...this.state.finalLayout]
+                layout[caca.closedList[i].index].value = 7
+                layout[caca.closedList[i].index].gCost = caca.closedList[i].gCost
+                layout[caca.closedList[i].index].hCost = caca.closedList[i].hCost
+                layout[caca.closedList[i].index].fCost = caca.closedList[i].fCost
+                this.setState({ finalLayout: layout })
+                await this.sleep(0.05)
+                // console.log('open list', i, caca.openList);
+                if (caca.openListHistory[i]) 
+                {
+                    for (let j = 0; j< caca.openListHistory[i].length; j++)
+                    {
+                        // console.log(caca.openListHistory[i][j].index);
+                        layout[caca.openListHistory[i][j].index].value = 8
+                        layout[caca.openListHistory[i][j].index].gCost = caca.openListHistory[i][j].gCost
+                        layout[caca.openListHistory[i][j].index].hCost = caca.openListHistory[i][j].hCost
+                        layout[caca.openListHistory[i][j].index].fCost = caca.openListHistory[i][j].fCost
+                        this.setState({ finalLayout: layout })
+                        await this.sleep(0.05)
+                    }
+                }
                 
-        //         layout[caca.closedList[i].index].value = 9
-        //         this.setState({ finalLayout: layout })
-        //         await this.sleep(0.05)
-        //     }
-        //     // const layout = [...this.state.finalLayout]
-        //     if (caca.positionFound)
-        //     {
-        //         for (let i = 0; i < caca.actualPath.length; i++)
-        //         {
-        //             layout[caca.actualPath[i].index].value = 10
-        //             layout[caca.actualPath[i].index].gCost = caca.actualPath[i].gCost
-        //             layout[caca.actualPath[i].index].hCost = caca.actualPath[i].hCost
-        //             layout[caca.actualPath[i].index].fCost = caca.actualPath[i].fCost
-        //             this.setState({ finalLayout: layout })
-        //             await this.sleep(0.1)
-        //         }
-        //         this.setState({ finalLayout: layout })
-        //         await this.sleep(0.5)
-        //     }
+                layout[caca.closedList[i].index].value = 9
+                this.setState({ finalLayout: layout })
+                await this.sleep(0.05)
+            }
+            // const layout = [...this.state.finalLayout]
+            if (caca.positionFound)
+            {
+                console.log(caca.actualPath);
+                for (let i = 0; i < caca.actualPath.length; i++)
+                {
+                    layout[caca.actualPath[i].index].value = 10
+                    layout[caca.actualPath[i].index].gCost = caca.actualPath[i].gCost
+                    layout[caca.actualPath[i].index].hCost = caca.actualPath[i].hCost
+                    layout[caca.actualPath[i].index].fCost = caca.actualPath[i].fCost
+                    this.setState({ finalLayout: layout })
+                    await this.sleep(0.1)
+                }
+                this.setState({ finalLayout: layout })
+                await this.sleep(0.5)
+            }
             
-        // }, 
-        // 0)
+        }, 
+        0)
     }
 
     sleep = (seconds) => {
@@ -308,7 +309,7 @@ class Game extends React.Component
                             {el.value === 6 ? el.ghost.render():null}
                             {el.value === 7 && (<div key={index} className="green"><p>[{el.gCost}-{el.hCost}] {el.fCost} {index}</p></div>)}
                             {el.value === 8 && (<div key={index} className="blue"><p>[{el.gCost}-{el.hCost}] {el.fCost} {index}</p></div>)}
-                            {el.value === 9 && (<div key={index} className="red"><p>[{el.gCost}-{el.hCost}] {el.fCost} {index}</p></div>)}
+                            {el.value === 9 && (<div key={index} className="light-red"><p>[{el.gCost}-{el.hCost}] {el.fCost} {index}</p></div>)}
                             {el.value === 10 && (<div key={index} className="orange"><p>[{el.gCost}-{el.hCost}] {el.fCost} {index}</p></div>)}
                         </>
                     ))}

@@ -244,13 +244,6 @@ class Ghost
         const currentVector = new Vector2(currentPosition.posX, currentPosition.posY)
         const destinationVector = new Vector2(destinationPosition.posX, destinationPosition.posY)
 
-
-
-        // const pathFinding = new Pathfinding(finalLayout, this.currentIndex)
-        // pathFinding.findPath(currentVector, destinationVector)
-
-
-
         const distance = currentVector.Distance(destinationVector)
         const hCost = Math.floor(distance*10) // la distance en gros
         const fCost = gCost + hCost // cout total = cout de déplacement + distance
@@ -305,12 +298,19 @@ class Ghost
                 closedList.push(openList[0])
                 closedList.push(nextPathNode)
                 console.timeEnd("init")
+                const tab = [nextPathNode]
+                let currentPathNode = nextPathNode
+                while (currentPathNode.cameFromNode !== null)
+                {
+                    tab.push(currentPathNode.cameFromNode)
+                    currentPathNode = currentPathNode.cameFromNode
+                }
                 return {
                     openList,
                     closedList,
                     openListHistory: newOpenListHistory,
                     positionFound: nextPathNode,
-                    actualPath: this.getActualPath(nextPathNode)
+                    actualPath: tab
                 }
             }
 
